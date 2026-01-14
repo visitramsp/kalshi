@@ -422,7 +422,7 @@ export default function CommentPage({
           <hr className="border-gray-700" />
         </div>
         <div>
-          {true ? (
+          {isLoader ? (
             <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
               <CircularProgress className="" />
             </div>
