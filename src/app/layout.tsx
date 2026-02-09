@@ -7,6 +7,7 @@ import ReduxProvider from "@/components/store/providers";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import SocketProvider from "@/components/socket/SocketProvider"; // 👈 new
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,6 +68,7 @@ export default function RootLayout({
               <Toaster position="top-right" />
               <Header />
               <main className="pt-16">{children}</main>
+               <SpeedInsights />
               <Footer />
             </ThemeProvider>
           </SocketProvider>
