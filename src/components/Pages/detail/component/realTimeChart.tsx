@@ -11,24 +11,45 @@ const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 interface StackedAreaChartProps {
   data?: RawSeries[];
+  timeIntervalValue: string;
+  setTimeIntervalValue: (value: string) => void;
 }
+const BASE_COLORS = [
+  "#008FFB",
+  "#00E396",
+  "#FEB019",
+  "#FF4560",
+  "#775DD0",
+  "#3F51B5",
+  "#546E7A",
+  "#D4526E",
+  "#8D5B4C",
+  "#F86624",
+];
 
-const StackedAreaChart = ({ data = [] }: StackedAreaChartProps) => {
+const StackedAreaChart = ({
+  data = [],
+  timeIntervalValue = "all",
+  setTimeIntervalValue,
+}: StackedAreaChartProps) => {
   const { theme } = useTheme();
   const series = prepareSeries(data);
+  const colors = series.map(
+    (_, index) => BASE_COLORS[index % BASE_COLORS.length],
+  );
   const options: ApexOptions = {
     chart: {
       type: "area",
-      stacked: true,
+      stacked: false,
       toolbar: {
         show: false,
       },
       zoom: {
-        enabled: false,
+        enabled: true,
       },
     },
 
-    colors: ["#008FFB", "#00E396"],
+    colors: colors,
 
     dataLabels: {
       enabled: false,
@@ -50,6 +71,7 @@ const StackedAreaChart = ({ data = [] }: StackedAreaChartProps) => {
     },
 
     legend: {
+      show: false,
       position: "top",
       horizontalAlign: "left",
       floating: true,
@@ -77,7 +99,7 @@ const StackedAreaChart = ({ data = [] }: StackedAreaChartProps) => {
         show: false,
       },
       axisTicks: {
-        show: false,
+        show: true,
       },
     },
 
@@ -107,6 +129,8 @@ const StackedAreaChart = ({ data = [] }: StackedAreaChartProps) => {
     },
 
     tooltip: {
+      shared: true, // ❌ sabka data ek sath nahi
+      intersect: false,
       x: {
         format: "dd MMM yyyy HH:mm",
       },
@@ -116,17 +140,48 @@ const StackedAreaChart = ({ data = [] }: StackedAreaChartProps) => {
     },
   };
 
-  console.log(series, "series");
+  const timeInterval = ["5m", "15m", "30m", "1h", "24h", "7d", "all"];
 
   return (
-    <div className="w-full -mx-4 sm:mx-0">
-      <ApexChart
-        type="area"
-        height={230}
-        width={800}
-        series={series}
-        options={options}
-      />
+    <div className="w-full flex  relative -mx-4 sm:mx-0">
+      <div
+        className="absolute right-0 -top-1 flex items-center gap-1
+  dark:bg-[#2B394D] bg-gray-200 rounded-lg px-1 py-1
+"
+      >
+        {timeInterval.map((item) => (
+          <button
+            key={item}
+            onClick={() => setTimeIntervalValue(item)}
+            className={`
+        px-3 py-1 text-xs font-medium rounded-md
+        transition-all
+        ${
+          item === timeIntervalValue
+            ? "dark:bg-[#1D293D] bg-gray-50 dark:text-white text-black"
+            : "dark:text-gray-400 text-gray-600 hover:text-white cursor-pointer hover:bg-white/5"
+        }
+      `}
+          >
+            {item.toUpperCase()}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4  w-full">
+        {Number(data?.length) > 0 ? (
+          <ApexChart
+            type="area"
+            height={230}
+            // width={800}
+            series={series}
+            options={options}
+          />
+        ) : (
+          <div className="bg-cyan-100/80 rounded-lg h-56 mt-6 flex items-center justify-center">
+            <span className="text-gray-500">[Chart Placeholder]</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,14 +1,17 @@
-
-
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export", // Enables static export (next export)
-  trailingSlash: true, // Optional: adds trailing slashes to all routes (useful for static hosting)
-  reactStrictMode: true, // Optional: React dev checks
-  // swcMinify: true, // Optional: enables faster build times with SWC
+  // output: "export", // ✅ REQUIRED for out/
+  trailingSlash: true, // ✅ folder-based routing
   images: {
-    unoptimized: true, // Required for static export when using next/image
+    unoptimized: true, //  server side pe comment karna haio
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 

@@ -2,7 +2,7 @@ import Home from "@/components/Pages/Home/page";
 import React from "react";
 const page = () => {
   return (
-    <div className="bg-white dark:bg-[#0f172a]">
+    <div className="bg-bgdark bg-bglight">
       <Home />
     </div>
   );

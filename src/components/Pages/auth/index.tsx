@@ -22,7 +22,7 @@ export default function Authentication({
 
   const dispatch = useDispatch();
   const handleRegister = () => {
-    handleClose();
+    //
     setRegisterOpen(true);
   };
   const handleRegisterClose = () => {
@@ -33,14 +33,12 @@ export default function Authentication({
       const reqBody = {
         idToken: token,
       };
-      // eyJhbGciOiJSUzI1NiIsImtpZCI6IjRiYTZlZmVmNWUxNzIxNDk5NzFhMmQzYWJiNWYzMzJlMGY3ODcxNjUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI4MzU5ODgwMzU5MzAtZWszYjI5N2owbzM0MDk4M2w1c2NiaWdtM21jbWg5b2YuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4MzU5ODgwMzU5MzAtZWszYjI5N2owbzM0MDk4M2w1c2NiaWdtM21jbWg5b2YuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQyNDM4Nzk0NDg1NzA5NjYzMzkiLCJlbWFpbCI6InZhYmhpNzAyOUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzY3OTUzMTU3LCJuYW1lIjoiQWJoaSBWYXJtYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NLcUFqTXR5S29SSEhQTTFFU1VWdGIwWXdvNmphbEdCNWlxYS0yeno2RUhuaVpvWGc9czk2LWMiLCJnaXZlbl9uYW1lIjoiQWJoaSIsImZhbWlseV9uYW1lIjoiVmFybWEiLCJpYXQiOjE3Njc5NTM0NTcsImV4cCI6MTc2Nzk1NzA1NywianRpIjoiY2MyYmMzYWMxN2I3MGY3NzQ3Y2VjYTVhZDQzMzk0ZWJlOGM2YWE4ZCJ9.TeBt3fJzjcVX2YVB7n79z-OkPga5f5jlbi6rNf0IezR37Ufqc86yTXVZ65h2tbguhn8cjL99_3AAKVuUu8wAIje5tk21v34rgXH9ZbwtrL59-XxsRQx_xLA5ljpLWy8lx_xEaAhP-S46m3QpcmI6DjmPNF_aIIYaI2VJ1r3O7FKIKfS-arYY8ElxCyHcVvPuGGONOXMaD2BjU7o-qtalMxRyyOvYl3puLMH-6aij2I3PL_WCa3OoQZak5mG_qvs8e4PN1qi0nGOTDLTys4eiFVXjNSJMUReJH6OF1fPfLnRKaYCgp3hUbidnrjL8xsTEOzQaZispqfc4suNoPpbRAg
       const response = await googleLoginAPI(reqBody);
-      console.log(response, "response");
 
       if (response?.success) {
         localStorage.setItem("token", response?.data?.token);
         dispatch(
-          login({ user: response?.data?.user, token: response?.data?.token })
+          login({ user: response?.data?.user, token: response?.data?.token }),
         );
         toast.success(response?.message);
         // window.location.reload();
@@ -49,8 +47,6 @@ export default function Authentication({
         toast.error(response?.message || "Something went wrong?");
       }
     } catch (error: unknown) {
-      console.log(error, "Error");
-
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
@@ -65,28 +61,45 @@ export default function Authentication({
           {isLogin ? " Login your account" : " Create your account"}
         </h2>
 
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <div className="w-full flex justify-center mt-10">
-            <div className="w-full max-w-md">
+        <GoogleOAuthProvider
+          clientId={GOOGLE_CLIENT_ID}
+          // onScriptLoadSuccess={() => {
+          //   // disable auto select from previous session
+          //   if (window.google?.accounts?.id) {
+          //     window.google.accounts.id.disableAutoSelect();
+          //   }
+          // }}
+        >
+          <div className="mt-6 flex justify-center w-full">
+            <div
+              className="google-btn-wrapper w-full"
+              // style={{
+              //   width: "100%",
+              //   maxWidth: "420px",
+              // }}
+            >
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
-                  const token: string = credentialResponse.credential || "";
-                  const userInfo = jwtDecode(token);
-                  console.log("User Info:", userInfo);
+                  const token = credentialResponse.credential || "";
                   await loginWithGoogle(token);
                 }}
                 onError={() => toast.error("Login Failed")}
-                width="100%"
                 theme="filled_blue"
-                shape="square"
                 size="large"
-                containerProps={{
-                  style: {
-                    width: "100%",
-                    borderRadius: "0px",
-                    overflow: "hidden",
-                  },
-                }}
+                shape="rectangular"
+                // width="100%"
+                auto_select={false}
+                useOneTap={false}
+                // width={330}
+
+                // prompt="select_account"
+                // containerProps={{
+                //   style: {
+                //     // width: "100%",
+                //     display: "block",
+                //     justifyContent: "center",
+                //   },
+                // }}
               />
             </div>
           </div>
@@ -117,7 +130,9 @@ export default function Authentication({
       <Register
         isLogin={isLogin}
         handleClose={handleRegisterClose}
+        goBack={() => setRegisterOpen(false)}
         isOpen={registerOpen}
+        mainHandleClose={handleClose}
       />
     </>
   );

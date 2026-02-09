@@ -1,14 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Poppins, Roboto } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Layout/Header/page";
 import Footer from "@/components/Layout/Footer/page";
 import ReduxProvider from "@/components/store/providers";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
+import SocketProvider from "@/components/socket/SocketProvider"; // 👈 new
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+// const poppins = Poppins({
+//   subsets: ["latin"],
+//   weight: ["300", "400", "500", "600", "700"],
+//   variable: "--font-poppins",
+//   display: "swap",
+// });
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -23,34 +39,37 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="bg-white dark:bg-[#0f172a]">
+    <html
+      lang="en"
+      className={` light dark:bg-bgdark bg-bglight ${roboto.variable}`}
+    >
       <body
         className={`
-          bg-gradient-to-b
-          from-white to-[#F8FBFF]
+          bg-bglight dark:bg-bgdark
           text-black dark:text-white 
           ${geistSans.variable}
           ${geistMono.variable}
           antialiased
-          min-h-screen `}
+          min-h-screen
+          `}
       >
         <ReduxProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            // disableTransitionOnChange
-          >
-            <Toaster position="top-right" />
-
-            <Header />
-            {children}
-            <Footer />
-          </ThemeProvider>
+          <SocketProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem={false}
+            >
+              <Toaster position="top-right" />
+              <Header />
+              <main className="pt-16">{children}</main>
+              <Footer />
+            </ThemeProvider>
+          </SocketProvider>
         </ReduxProvider>
       </body>
     </html>

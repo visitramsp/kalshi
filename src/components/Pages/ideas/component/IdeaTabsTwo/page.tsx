@@ -10,18 +10,19 @@ import {
   FaRegHeart,
   FaBookmark,
 } from "react-icons/fa";
-import { HighlightTexts, timeAgoCompact } from "@/utils/Content";
-// import {
-//   postBookmarkOrUnBookMark,
-//   postLikeOrUnlike,
-// } from "../service/apiService/user";
+import { HighlightTexts, isGifImage, timeAgoCompact } from "@/utils/Content";
 import { FcLike } from "react-icons/fc";
 import toast from "react-hot-toast";
 import { PostFeeBack, SetPosts } from "@/utils/typesInterface";
 import {
+  getMyAllPost,
   postBookmarkOrUnBookMark,
   postLikeOrUnlike,
+  userPositions,
 } from "@/components/service/apiService/user";
+import { PostSkeleton } from "@/utils/customSkeleton";
+import { Position } from "@/components/Pages/userProfile/proTabs/page";
+import ViewImage from "@/components/common/ViewImage";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,27 +53,39 @@ function a11yProps(index: number) {
   };
 }
 type HandleComment = (post: PostFeeBack) => void;
+// const [currentTabs, setCurrentTabs] = useState(0);
 
+const isGif = (url = "") => url.includes("giphy") || /\.gif($|\?)/i.test(url);
 export default function IdeaTabsTwo({
   postedList,
   setAllPosts,
   handleComment,
+  isBookMark = false,
+  loader = false,
+  handleUserDetails,
+  isYourPost,
+  setCurrentTabs,
+  setMyPost,
+  myPost,
 }: {
   postedList: PostFeeBack[];
   setAllPosts: SetPosts;
   handleComment: HandleComment;
+  isBookMark: boolean;
+  loader: boolean;
+  handleUserDetails: (id: string) => void;
+  isYourPost: boolean;
+  setCurrentTabs: (id: number) => void;
+  setMyPost: SetPosts;
+  myPost: PostFeeBack[];
 }) {
   const [value, setValue] = React.useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
+    setCurrentTabs(newValue);
   };
-
-  console.log(postedList, "postedList");
-
-  // const handleShareNow = (postDetails: any) => {
-  //   console.log(postDetails, "share===>");
-  // };
+  console.log(value, "value===>");
 
   const handleLikeUnlike = async (id: number, isLike: number) => {
     try {
@@ -81,22 +94,41 @@ export default function IdeaTabsTwo({
       } else {
         toast.success("like");
       }
-      setAllPosts((prev) =>
-        prev.map((item) => {
-          if (item.id == id) {
-            const isLiked = item.isLiked === 1 ? 0 : 1;
+      if (value == 1) {
+        setMyPost((prev) =>
+          prev.map((item) => {
+            if (item.id == id) {
+              const isLiked = item.isLiked === 1 ? 0 : 1;
 
-            return {
-              ...item,
-              isLiked,
-              likeCount: isLiked
-                ? item.likeCount + 1
-                : Math.max(item.likeCount - 1, 0),
-            };
-          }
-          return item;
-        })
-      );
+              return {
+                ...item,
+                isLiked,
+                likeCount: isLiked
+                  ? item.likeCount + 1
+                  : Math.max(item.likeCount - 1, 0),
+              };
+            }
+            return item;
+          }),
+        );
+      } else {
+        setAllPosts((prev) =>
+          prev.map((item) => {
+            if (item.id == id) {
+              const isLiked = item.isLiked === 1 ? 0 : 1;
+
+              return {
+                ...item,
+                isLiked,
+                likeCount: isLiked
+                  ? item.likeCount + 1
+                  : Math.max(item.likeCount - 1, 0),
+              };
+            }
+            return item;
+          }),
+        );
+      }
 
       const payload = {
         postId: id,
@@ -114,21 +146,45 @@ export default function IdeaTabsTwo({
 
   const handleBookMarkOrUnBookMark = async (
     id: number,
-    isBookmarked: number
+    isBookmarked: number,
   ) => {
     try {
-      setAllPosts((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            const booked = item.isBookmarked === 1 ? 0 : 1;
-            return {
-              ...item,
-              isBookmarked: booked,
-            };
+      if (value == 1) {
+        setMyPost((prev) => {
+          if (isBookMark === true) {
+            return prev.filter((item) => item.id !== id);
+          } else {
+            return prev.map((item) => {
+              if (item.id === id) {
+                const booked = item.isBookmarked === 1 ? 0 : 1;
+                return {
+                  ...item,
+                  isBookmarked: booked,
+                };
+              }
+              return item;
+            });
           }
-          return item;
-        })
-      );
+        });
+      } else {
+        setAllPosts((prev) => {
+          if (isBookMark === true) {
+            return prev.filter((item) => item.id !== id);
+          } else {
+            return prev.map((item) => {
+              if (item.id === id) {
+                const booked = item.isBookmarked === 1 ? 0 : 1;
+                return {
+                  ...item,
+                  isBookmarked: booked,
+                };
+              }
+              return item;
+            });
+          }
+        });
+      }
+
       if (isBookmarked == 1) {
         toast.success("Remove for bookmarks");
       } else {
@@ -147,115 +203,121 @@ export default function IdeaTabsTwo({
     }
   };
 
+  const locationUrl = window.location?.pathname;
+
+  console.log(locationUrl, "locationUrl");
+
+  console.log(myPost, "positions");
+
   return (
-    <Box sx={{ width: "100%" }}>
+    <>
       <Box
-        sx={{
-          borderBottom: 1,
-          borderColor: "var(--border-color)",
-        }}
+        style={{ position: "relative", zIndex: "10" }}
+        sx={{ width: "100%", position: "relative" }}
       >
-        <Tabs
-          value={value}
-          onChange={handleChange}
-          aria-label="time filter tabs"
+        <Box
           sx={{
-            "& .MuiTab-root": {
-              color: "#6b7280",
-              textTransform: "none",
-              fontWeight: 500,
-            },
-            "& .Mui-selected": {
-              color: "#caac75",
-            },
-            "& .MuiTabs-indicator": {
-              backgroundColor: "#caac75",
-            },
+            borderBottom: 1,
+            borderColor: "var(--color-borderdark)",
           }}
         >
-          <Tab label="Now" {...a11yProps(0)} />
-          {/* <Tab label="Today" {...a11yProps(1)} />
-          <Tab label="This Week" {...a11yProps(2)} />
-          <Tab label="This Month" {...a11yProps(3)} /> */}
-        </Tabs>
-      </Box>
-      <CustomTabPanel value={value} index={0}>
-        <div className="p-3 border-b dark:border-gray-700 border-gray-200">
-          {postedList?.length > 0 ? (
-            postedList?.map((row: PostFeeBack, index: number) => {
-              const contentForPost = JSON.parse(row?.metadata);
-              console.log(contentForPost, "contentForPost");
+          <Tabs
+            value={value}
+            onChange={handleChange}
+            aria-label="time filter tabs"
+            sx={{
+              "& .MuiTab-root": {
+                color: "#80899b",
+                textTransform: "none",
+                fontWeight: 500,
+              },
+              "& .Mui-selected": {
+                color: "#8160ee",
+              },
+              "& .MuiTabs-indicator": {
+                backgroundColor: "#8160ee",
+              },
+            }}
+          >
+            <Tab label="Now" {...a11yProps(0)} />
+            {locationUrl != "/ideas/bookmark/" && isYourPost && (
+              <Tab label="Your Post" {...a11yProps(1)} />
+            )}
+          </Tabs>
+        </Box>
+        <CustomTabPanel value={value} index={0}>
+          <div className="p-3 border-b  dark:border-gray-700 border-gray-200">
+            {loader ? (
+              <PostSkeleton />
+            ) : postedList?.length > 0 ? (
+              postedList?.map((row: PostFeeBack, index: number) => {
+                const contentForPost = (() => {
+                  if (!row?.metadata) return null;
+                  if (typeof row?.metadata === "object") {
+                    return row?.metadata;
+                  }
+                  try {
+                    return JSON.parse(row?.metadata);
+                  } catch (e) {
+                    return null;
+                  }
+                })();
 
-              return (
-                <div
-                  key={row.id}
-                  className={`md:flex ${
-                    index > 0 && "pt-4 border-t border-gray-800"
-                  }  border-gray-300 pb-2 items-start gap-4 w-full md:px-4 px-0`}
-                >
-                  <div>
-                    <Image
-                      src={
-                        row?.User?.image_url ||
-                        "https://cdn.vectorstock.com/i/500p/98/17/gray-man-placeholder-portrait-vector-23519817.jpg"
-                      }
-                      alt="user"
-                      width={70}
-                      height={70}
-                      className="rounded-md mt-1"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4>
-                        <span className="dark:text-gray-300 hover:underline font-semibold text-gray-700">
-                          {row?.User?.username || "Unknown"} dd
-                        </span>{" "}
-                        <span className="text-xs dark:text-gray-500 text-gray-500">
-                          {timeAgoCompact(row?.updatedAt)}
-                        </span>
-                      </h4>
+                const imageUrl = contentForPost?.images?.[0];
+                return (
+                  <div
+                    key={row?.id}
+                    className={`md:flex ${
+                      index > 0 &&
+                      "pt-4 border-t border-gray-200 dark:border-gray-700"
+                    }  border-gray-300 pb-2 items-start gap-4 w-full md:px-4 px-0`}
+                  >
+                    <div className="bg-gray-100 dark:bg-gray-600 rounded p-1.5 w-fit">
+                      <Image
+                        onClick={() => handleUserDetails(`${row?.User?.id}`)}
+                        src={
+                          row?.User?.image_url ||
+                          "https://cdn.vectorstock.com/i/500p/98/17/gray-man-placeholder-portrait-vector-23519817.jpg"
+                        }
+                        alt="user"
+                        width={50}
+                        height={50}
+                        className="rounded-md   cursor-pointer"
+                      />
                     </div>
-                    <p className="text-md mt-2 dark:text-gray-400 text-gray-800">
-                      {contentForPost?.content && (
-                        <HighlightTexts
-                          key={index}
-                          text={contentForPost?.content}
-                        />
-                      )}
-                      <br />
-                      <br />
-                      {contentForPost?.images?.length > 0 && (
-                        <Image
-                          src={contentForPost?.images?.[0]}
-                          height={500}
-                          alt="post image"
-                          width={500}
-                        />
-                      )}
-                    </p>
-                    {/* <p className="mt-3 cursor-pointer hover:underline text-[#caac75] font-semibold">
-                      Ningbo Rockets vs Beijing Ducks
-                    </p>
-                    <p className="text-sm text-[#caac75]/80">
-                      Yes . Beijing Ducks . BED at NIN (Jan 6) . 86% chance{" "}
-                      <FaArrowUp
-                        className="
-                          rotate-45
-                          text-green-400
-                          transition-transform
-                          duration-200
-                          hover:scale-125 inline-block
-                        "
-                      />{" "}
-                      Now 77% chance
-                    </p> */}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-row items-center gap-2">
+                          <div
+                            onClick={() =>
+                              handleUserDetails(`${row?.User?.id}`)
+                            }
+                            className="dark:text-gray-300  cursor-pointer hover:underline font-semibold text-gray-700"
+                          >
+                            {row?.User?.username || "Unknown"}
+                          </div>{" "}
+                          <span className="text-xs dark:text-gray-500 text-gray-500">
+                            {timeAgoCompact(row?.updatedAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-md mt-2 dark:text-gray-400 text-gray-800">
+                        {contentForPost?.content && (
+                          <HighlightTexts
+                            key={index}
+                            text={contentForPost?.content}
+                          />
+                        )}
+                        <br />
 
-                    <div className="mt-4">
-                      <div className="flex justify-between">
-                        <div className="flex gap-3 items-center">
-                          <span
-                            className="
+                        {imageUrl && <ViewImage imageUrl={imageUrl} />}
+                      </p>
+
+                      <div className="mt-4">
+                        <div className="flex justify-between">
+                          <div className="flex gap-3 items-center">
+                            <span
+                              className="
                               p-2
                               rounded
                               inline-block
@@ -266,17 +328,17 @@ export default function IdeaTabsTwo({
                               duration-200
                               ease-in-out text-lg cursor-pointer
                             "
-                          >
-                            <FaRegCommentAlt
-                              onClick={() => handleComment(row)}
-                            />
-                          </span>
-                          <span className="inline-block relative -left-3 font-light text-gray-400">
-                            {row?.commentCount || 0}
-                          </span>
+                            >
+                              <FaRegCommentAlt
+                                onClick={() => handleComment(row)}
+                              />
+                            </span>
+                            <span className="inline-block relative -left-3 font-light text-gray-400">
+                              {row?.commentCount || 0}
+                            </span>
 
-                          <span
-                            className="
+                            <div
+                              className="
                                 p-2
                                 rounded
                                 inline-block
@@ -287,28 +349,18 @@ export default function IdeaTabsTwo({
                                 duration-200
                                 ease-in-out text-xl cursor-pointer
                               "
-                          >
-                            {/* FcLike  */}
-
-                            {row?.isLiked == 1 ? (
-                              <FcLike
-                                onClick={() =>
-                                  handleLikeUnlike(row?.id, row?.isLiked)
-                                }
-                              />
-                            ) : (
-                              <FaRegHeart
-                                onClick={() =>
-                                  handleLikeUnlike(row?.id, row?.isLiked)
-                                }
-                              />
-                            )}
-                          </span>
-                          <span className="inline-block relative -left-3 font-light text-gray-400">
-                            {row?.likeCount || 0}
-                          </span>
-                          <span
-                            className="
+                              onClick={() =>
+                                handleLikeUnlike(row?.id, row?.isLiked)
+                              }
+                            >
+                              {/* FcLike  */}
+                              {row?.isLiked == 1 ? <FcLike /> : <FaRegHeart />}
+                            </div>
+                            <span className="inline-block relative -left-3 font-light text-gray-400">
+                              {row?.likeCount || 0}
+                            </span>
+                            <span
+                              className="
                               p-2
                               rounded
                               inline-block
@@ -319,57 +371,210 @@ export default function IdeaTabsTwo({
                               duration-200
                               ease-in-out text-lg cursor-pointer
                             "
-                          >
-                            {row?.isBookmarked == 1 ? (
-                              <FaBookmark
-                                className="text-[#156bf7]"
-                                onClick={() =>
-                                  handleBookMarkOrUnBookMark(
-                                    row?.id,
-                                    row?.isBookmarked
-                                  )
-                                }
-                              />
-                            ) : (
-                              <FaRegBookmark
-                                onClick={() =>
-                                  handleBookMarkOrUnBookMark(
-                                    row?.id,
-                                    row?.isBookmarked
-                                  )
-                                }
-                              />
-                            )}
-                          </span>
-                          <span className="inline-block relative -left-3 font-light text-gray-400"></span>
-                          <span
-                            className="
-                              p-2
-                              rounded
-                              inline-block
-                              text-gray-500
-                              dark:text-gray-400
-                              hover:bg-gray-400/30
-                              transition-all
-                              duration-200
-                              ease-in-out text-lg cursor-pointer
-                            "
-                          >
-                            <LuUpload />
-                            {/* <LuUpload onClick={() => handleShareNow(row)} /> */}
-                          </span>
+                              onClick={() =>
+                                handleBookMarkOrUnBookMark(
+                                  row?.id,
+                                  row?.isBookmarked,
+                                )
+                              }
+                            >
+                              {row?.isBookmarked == 1 ? (
+                                <FaBookmark className="text-[#156bf7]" />
+                              ) : (
+                                <FaRegBookmark />
+                              )}
+                            </span>
+                            <span className="inline-block relative -left-3 font-light text-gray-400"></span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
+                  <FaRegCommentAlt className="text-2xl text-gray-500 dark:text-gray-400" />
                 </div>
-              );
-            })
-          ) : (
-            <div className="text-gray-400 text-center">Not found any list</div>
-          )}
-        </div>
-      </CustomTabPanel>
-    </Box>
+
+                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                  No Post yet
+                </h3>
+
+                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                  Be the first to share your thoughts and spark a conversation.
+                </p>
+              </div>
+            )}
+          </div>
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={1}>
+          <div className="p-3 border-b  dark:border-gray-700 border-gray-200">
+            {loader ? (
+              <PostSkeleton />
+            ) : myPost?.length > 0 ? (
+              myPost?.map((row: any, index: number) => {
+                const contentForPost = (() => {
+                  if (!row?.metadata) return null;
+                  if (typeof row?.metadata === "object") {
+                    return row?.metadata;
+                  }
+                  try {
+                    return JSON.parse(row?.metadata);
+                  } catch (e) {
+                    return null;
+                  }
+                })();
+
+                const imageUrl = contentForPost?.images?.[0];
+
+                return (
+                  <div
+                    key={row?.id}
+                    className={`md:flex ${
+                      index > 0 &&
+                      "pt-4 border-t border-gray-200 dark:border-gray-700"
+                    }  border-gray-300 pb-2 items-start gap-4 w-full md:px-4 px-0`}
+                  >
+                    <div className="bg-gray-100 dark:bg-gray-600 rounded p-1.5 w-fit">
+                      <Image
+                        onClick={() => handleUserDetails(`${row?.User?.id}`)}
+                        src={
+                          row?.User?.image_url ||
+                          "https://cdn.vectorstock.com/i/500p/98/17/gray-man-placeholder-portrait-vector-23519817.jpg"
+                        }
+                        alt="user"
+                        width={50}
+                        height={50}
+                        className="rounded-md   cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-row items-center gap-2">
+                          <div
+                            onClick={() =>
+                              handleUserDetails(`${row?.User?.id}`)
+                            }
+                            className="dark:text-gray-300  cursor-pointer hover:underline font-semibold text-gray-700"
+                          >
+                            {row?.User?.username || "Unknown"}
+                          </div>{" "}
+                          <span className="text-xs dark:text-gray-500 text-gray-500">
+                            {timeAgoCompact(row?.updatedAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-md mt-2 dark:text-gray-400 text-gray-800">
+                        {contentForPost?.content && (
+                          <HighlightTexts
+                            key={index}
+                            text={contentForPost?.content}
+                          />
+                        )}
+                        <br />
+
+                        {imageUrl && <ViewImage imageUrl={imageUrl} />}
+                      </p>
+
+                      <div className="mt-4">
+                        <div className="flex justify-between">
+                          <div className="flex gap-3 items-center">
+                            <span
+                              className="
+                              p-2
+                              rounded
+                              inline-block
+                              text-gray-500
+                              dark:text-gray-400
+                              hover:bg-gray-400/30
+                              transition-all
+                              duration-200
+                              ease-in-out text-lg cursor-pointer
+                            "
+                            >
+                              <FaRegCommentAlt
+                                onClick={() => handleComment(row)}
+                              />
+                            </span>
+                            <span className="inline-block relative -left-3 font-light text-gray-400">
+                              {row?.commentCount || 0}
+                            </span>
+
+                            <div
+                              className="
+                                p-2
+                                rounded
+                                inline-block
+                                text-gray-500
+                                dark:text-gray-400
+                                hover:bg-gray-400/30
+                                transition-all
+                                duration-200
+                                ease-in-out text-xl cursor-pointer
+                              "
+                              onClick={() =>
+                                handleLikeUnlike(row?.id, row?.isLiked)
+                              }
+                            >
+                              {/* FcLike  */}
+                              {row?.isLiked == 1 ? <FcLike /> : <FaRegHeart />}
+                            </div>
+                            <span className="inline-block relative -left-3 font-light text-gray-400">
+                              {row?.likeCount || 0}
+                            </span>
+                            <span
+                              className="
+                              p-2
+                              rounded
+                              inline-block
+                              text-gray-500
+                              dark:text-gray-400
+                              hover:bg-gray-400/30
+                              transition-all
+                              duration-200
+                              ease-in-out text-lg cursor-pointer
+                            "
+                              onClick={() =>
+                                handleBookMarkOrUnBookMark(
+                                  row?.id,
+                                  row?.isBookmarked,
+                                )
+                              }
+                            >
+                              {row?.isBookmarked == 1 ? (
+                                <FaBookmark className="text-[#156bf7]" />
+                              ) : (
+                                <FaRegBookmark />
+                              )}
+                            </span>
+                            <span className="inline-block relative -left-3 font-light text-gray-400"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
+                  <FaRegCommentAlt className="text-2xl text-gray-500 dark:text-gray-400" />
+                </div>
+
+                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200">
+                  No Post yet
+                </h3>
+
+                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                  Be the first to share your thoughts and spark a conversation.
+                </p>
+              </div>
+            )}
+          </div>
+        </CustomTabPanel>
+      </Box>
+    </>
   );
 }

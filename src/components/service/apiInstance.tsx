@@ -1,10 +1,11 @@
-// src/services/apiInstance.ts
-
 import axios from "axios";
-
-// export const developmentBaseURL = "http://192.168.1.55:3000/api";
-// export const developmentBaseURL = "http://192.168.29.218:3000/api";
-export const developmentBaseURL = "https://api.opinionkings.com/api";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/slice/auth";
+//
+// export const basedURLs = "http://192.168.29.218:3000";
+export const basedURLs = "https://api.opinionkings.com";
+export const developmentBaseURL = `${basedURLs}/api`;
 
 const apiInstance = axios.create({
   baseURL: developmentBaseURL,
@@ -13,20 +14,32 @@ const apiInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-// Add interceptors if needed
 if (typeof window !== "undefined") {
   apiInstance.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem("token") || "";
-      console.log(token, "token====");
-
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
+  );
+
+  apiInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      const status = error?.response?.status;
+      const isToken = localStorage.getItem("token");
+      console.log(status, isToken, "status");
+      if (status === 401 && isToken) {
+        toast.success("Token expired 🚫 Logging out...");
+        localStorage.clear();
+        window.location.href = "/";
+      }
+
+      return Promise.reject(error);
+    },
   );
 }
 

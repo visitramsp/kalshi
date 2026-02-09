@@ -3,3 +3,25 @@ export const GOOGLE_CLIENT_ID =
 
 // export const GOOGLE_CLIENT_ID =
 //   "839094572220-q0hbofhogunt59dolacp2kfdlljm810n.apps.googleusercontent.com";
+
+export const PROFESSIONAL_EMOJIS = [
+  "🙂",
+  "😊",
+  "😄",
+  "👍",
+  "👏",
+  "🙏",
+  "✅",
+  "✔️",
+  "❌",
+  "💼",
+  "📊",
+  "📈",
+  "📉",
+  "💡",
+  "🚀",
+  "🔔",
+  "📌",
+  "⭐",
+  "🏆",
+];

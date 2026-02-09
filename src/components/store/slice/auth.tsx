@@ -34,10 +34,9 @@ const authSlice = createSlice({
     },
     login: (
       state,
-      action: PayloadAction<{ user: AuthUser; token: string }>
+      action: PayloadAction<{ user: AuthUser; token: string }>,
     ) => {
       const { user, token } = action.payload;
-      console.log(user, token, "user, token");
 
       state.user = user;
       state.token = token;
@@ -47,7 +46,6 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuth = false;
-      toast.success("User Logged Out");
     },
   },
 });

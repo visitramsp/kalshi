@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { FaBolt, FaBullseye } from "react-icons/fa";
 
@@ -31,7 +32,7 @@ export default function Dropdown({ label = "Market", onSelect }: Props) {
   return (
     <div ref={ref} className="relative inline-block">
       <div className="flex flex-row gap-1 items-center">
-        <span className="text-black dark:text-white text-sm">Order Type :</span>
+        {/* <span className="text-black dark:text-white text-sm">Order Type :</span> */}
         <button
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="true"
@@ -65,6 +66,16 @@ export default function Dropdown({ label = "Market", onSelect }: Props) {
             </MenuItem>
             <MenuItem label="Limit" onClick={() => choose("limit", "limit")}>
               <FaBullseye className="mt-1 text-blue-500" />
+            </MenuItem>
+            <MenuItem label="TP / SL" onClick={() => choose("tpsl", "tpsl")}>
+              {/* Take Profit / Stop Loss */}
+              <Image
+                src={"/img/icon/swap.png"}
+                alt="No Image"
+                height={12}
+                width={12}
+                className="-rotate-90 mt-1"
+              />
             </MenuItem>
           </div>
         </div>

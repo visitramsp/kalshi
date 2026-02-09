@@ -28,9 +28,7 @@ export default function Drawer({ buttonLabel, className }: RightDrawerProps) {
       {/* Overlay */}
       {isOpen && (
         <div
-          onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-black/50 bg-opacity-50 transition-opacity"
-        ></div>
+          onClick={() => setIsOpen(false)}></div>
       )}
 
       {/* Drawer */}

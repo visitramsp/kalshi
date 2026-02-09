@@ -1,6 +1,5 @@
 "use client";
 
-import ProfileTabs from "@/components/proTabs/page";
 import { userBalance, userDetails } from "@/components/service/apiService/user";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -11,14 +10,19 @@ import {
   UserBalanceData,
   UserProfileData,
 } from "@/utils/typesInterface";
+import ProfileTabs from "./proTabs/page";
+import FollowingFollowerList from "@/components/Modal/FollowingFollowerList/page";
 
 // Define the shape expected by ProfileTabs
 interface ProfileStats {
   portfolio: {
     investedAmount: number;
+    currentValue: number;
+    totalPnL: number;
   };
   stats: {
     totalTrades: string | number;
+    activeMarkets: string | number;
   };
 }
 
@@ -26,17 +30,22 @@ const UserProfile = () => {
   const [user, setUser] = useState<UserProfileData[] | null>(null);
   const [balance, setBalance] = useState<UserBalanceData | null>(null);
   const [open, setOpen] = useState(false);
+  const [isFollow, setIsFollow] = useState(false);
 
   // Derived safe data
   const userData = user?.[0] || null;
+  const portFolioData = user?.[1] || null;
 
   // Safe portfolio & stats with defaults
   const profileStats: ProfileStats = {
     portfolio: {
-      investedAmount: userData?.portfolio?.investedAmount || 0,
+      investedAmount: portFolioData?.portfolio?.investedAmount || 0,
+      currentValue: portFolioData?.portfolio?.currentValue || 0,
+      totalPnL: portFolioData?.portfolio?.totalPnL || 0,
     },
     stats: {
-      totalTrades: userData?.totalTrades || "0",
+      totalTrades: portFolioData?.stats?.totalTrades || "0",
+      activeMarkets: portFolioData?.stats?.activeMarkets || "0",
     },
   };
 
@@ -73,53 +82,58 @@ const UserProfile = () => {
   useEffect(() => {
     getUserBalance();
     userDetailsList();
-    localStorage.setItem("isCategory", "0");
   }, []);
 
   return (
     <>
-      <div className="dark:bg-[#0f172a] mt-44">
-        <div className="max-w-[800px] xl:max-w-[65%] mx-auto px-4 mt-24 lg:mt-28">
-          <div className="md:flex justify-between">
-            <div className="md:w-3/4 flex md:mb-0 mb-4">
-              <div>
+      <div>
+        <div className="max-w-[800px] xl:max-w-[65%] mx-auto px-4 mt-2 lg:mt-6">
+          <div className="md:flex justify-between md:pt-16 pt-8">
+            <div className="md:w-3/4 gap-3 md:flex md:mb-0 mb-4">
+              <div className="h-24 w-24 flex items-center justify-center rounded bg-gray-300/20">
                 <Image
-                  src="/img/nick.jpg"
+                  src={userData?.user?.image_url || "/img/user.png"}
                   alt="Profile"
                   width={80}
                   height={80}
-                  className="mr-4 rounded-lg object-cover"
+                  className="rounded object-cover"
                 />
               </div>
               <div className="flex-1">
                 <h2 className="dark:text-white text-black font-bold text-xl">
                   {userData?.user?.username || "Unknown User"}
                 </h2>
-                <p className="dark:text-gray-500 text-gray-400 text-sm">
+                <p className="dark:text-gray-400 text-gray-700 text-sm">
                   {userData?.user?.email || "--"}
                 </p>
-                <p className="dark:text-gray-500 text-gray-400 text-sm">
+                <p className="dark:text-gray-400 text-gray-700 text-sm">
                   Joined{" "}
                   {userData?.user?.createdAt
                     ? moment(userData.user.createdAt).format("DD MMM YYYY")
                     : "--"}
                 </p>
                 <p className="text-gray-200 mt-3 text-sm flex flex-wrap gap-4">
-                  <span className="text-gray-500">
+                  <span
+                    onClick={() => setIsFollow(true)}
+                    className="dark:text-gray-400 cursor-pointer text-gray-700"
+                  >
                     <span className="dark:text-white text-gray-800 font-semibold">
                       {userData?.following || "0"}
                     </span>{" "}
                     Following
                   </span>
 
-                  <span className="text-gray-500">
+                  <span
+                    onClick={() => setIsFollow(true)}
+                    className="dark:text-gray-400 cursor-pointer text-gray-700"
+                  >
                     <span className="dark:text-white text-gray-800 font-semibold">
                       {userData?.follower || "0"}
                     </span>{" "}
                     Followers
                   </span>
 
-                  <span className="text-gray-500">
+                  <span className="dark:text-gray-400 text-gray-700">
                     <span className="dark:text-white text-gray-800 font-semibold">
                       {profileStats.stats.totalTrades}
                     </span>{" "}
@@ -132,15 +146,36 @@ const UserProfile = () => {
             <div className="md:w-1/4">
               <button
                 onClick={() => setOpen(true)}
-                className="float-end dark:bg-gray-700 bg-gray-600 text-white py-2 px-6 rounded-2xl text-sm font-semibold hover:bg-[#0099FF] transition"
+                className="
+    md:float-end mb-3
+    relative select-none cursor-pointer
+
+    bg-[#0099FF] text-white
+    py-2 px-6 rounded-2xl text-sm font-semibold
+
+    
+    transition-all duration-150 ease-in-out
+
+    hover:brightness-110
+    active:translate-y-[4px]
+    active:shadow-[0_2px_0_#0077cc]
+  "
               >
                 Edit Profile
               </button>
             </div>
           </div>
+          <div className="mt-2">
+            <span className="text-gray-800 text-xs dark:text-gray-400">
+              <span className="font-medium text-gray-900 dark:text-gray-200">
+                Bio:
+              </span>{" "}
+              {userData?.user?.description || "--"}
+            </span>
+          </div>
 
           {/* Total Balance */}
-          <div className="md:mt-3 pt-3 border-t dark:border-gray-800 border-gray-300">
+          <div className="md:mt-3 pt-1 border-t dark:border-gray-700 border-gray-300">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <span className="me-2">
@@ -158,8 +193,8 @@ const UserProfile = () => {
                   Total Balance
                 </span>
               </div>
-              <div>
-                <span className="bg-green-700 text-white py-1 px-4 text-sm rounded">
+              <div className="md:mb-0 mb-3">
+                <span className="bg-green-700 text-white py-1 px-4 text-sm font-semibold rounded-full">
                   ${(Number(balance?.balance) || 0).toFixed(3)}
                 </span>
               </div>
@@ -167,7 +202,7 @@ const UserProfile = () => {
           </div>
 
           {/* Total Investment */}
-          <div className="md:mt-3 pt-3 border-t dark:border-gray-800 border-gray-300">
+          <div className="md:mt-3 pt-3 border-t dark:border-gray-700 border-gray-300">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <span className="me-2">
@@ -184,7 +219,7 @@ const UserProfile = () => {
                       width="3"
                       height="7"
                       rx="1"
-                      fill="#008236"
+                      fill="#f5c94d"
                     />
                     <rect
                       x="8"
@@ -192,7 +227,7 @@ const UserProfile = () => {
                       width="3"
                       height="10"
                       rx="1"
-                      fill="#008236"
+                      fill="#f5c94d"
                     />
                     <rect
                       x="13"
@@ -200,7 +235,7 @@ const UserProfile = () => {
                       width="3"
                       height="14"
                       rx="1"
-                      fill="#008236"
+                      fill="#f5c94d"
                     />
                     <rect
                       x="18"
@@ -208,7 +243,7 @@ const UserProfile = () => {
                       width="3"
                       height="18"
                       rx="1"
-                      fill="#008236"
+                      fill="#f5c94d"
                     />
                   </svg>
                 </span>
@@ -218,8 +253,11 @@ const UserProfile = () => {
               </div>
 
               <div>
-                <span className="bg-green-700 text-white py-1 px-4 text-sm rounded">
-                  ${profileStats.portfolio.investedAmount.toFixed(3)}
+                <span className="bg-yellow-500/70 text-white py-1 px-4 text-sm rounded-full font-semibold">
+                  $
+                  {Number(profileStats.portfolio.investedAmount).toFixed(
+                    3,
+                  )}{" "}
                 </span>
               </div>
             </div>
@@ -235,6 +273,13 @@ const UserProfile = () => {
           isOpen={open}
           handleClose={handleClose}
           userDetails={userData}
+          fetchUserDetails={userDetailsList}
+        />
+        <FollowingFollowerList
+          handleClose={() => setIsFollow(false)}
+          isOpen={isFollow}
+          onClose={() => setIsFollow(false)}
+          userId={userData?.user?.id}
         />
       </div>
     </>

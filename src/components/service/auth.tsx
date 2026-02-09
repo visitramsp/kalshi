@@ -5,10 +5,9 @@ import { API_URLs } from "./apiURLs";
 export const registerAPI = async (reqBody: unknown) => {
   try {
     const response = await apiInstance.post(API_URLs.register, reqBody);
-    console.log(response, "getErrorMessage--");
+
     return response?.data;
   } catch (error: unknown) {
-    console.log(getErrorMessage(error), "getErrorMessage");
     return {
       success: false,
       message: getErrorMessage(error),

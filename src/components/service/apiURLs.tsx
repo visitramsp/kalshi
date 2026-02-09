@@ -3,6 +3,7 @@
 export const API_URLs = {
   register: "/register",
   login: "/login",
+  logout: "/logout",
   googleLogin: "/google-login",
   verifyEmail: "/verify-email",
   commonCategoryAll: "/common/get-list-category",
@@ -30,6 +31,22 @@ export const API_URLs = {
   unFollowUser: "/user/unfollow",
   getComments: "/user/comments",
   postComments: "/user/comment",
+  getProfileListAllUser: "/user/get-social-user-profile",
+  currentBalanceShares: "/user/current-balance",
+  currentPositionShares: "/user/current-position-share",
+  profileUpdate: "/user/update-user-profile",
+  ordersTpAndSl: "/orders/submit-tpsl",
+  subCategory: "/common/get-sub-catagory",
+  questionBookMark: "/user/question-bookmark-or-unbookmark",
+  userCommentLikeOrUnlike: "/user/comment-like-or-unlike",
+  getWatchList: "/user/get-question-bookmarks",
+  getNotification: "/user/notifications",
+  getUnReadCountNotification: "/user/notifications/unread-count",
+  readNotification: "/user/notifications/read",
+  allReadNotification: "/user/notifications/all-read",
+  myAllPost: "/user/my-feed",
+  userSearch: "/user/search-users",
+  feedDetailsById: "/user/feed-by-id",
+  follow: "/user",
+  feedForFollowingList: "/user/feed",
 };
-
-// images

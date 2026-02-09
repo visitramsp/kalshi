@@ -12,6 +12,7 @@ import * as Yup from "yup";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useDispatch } from "react-redux";
 import { login } from "@/components/store/slice/auth";
+import { ArrowLeftIcon } from "lucide-react";
 const RegisterSchema = Yup.object().shape({
   userName: Yup.string()
     .required("Email or Phone is required")
@@ -21,7 +22,7 @@ const RegisterSchema = Yup.object().shape({
     .min(6, "Password must be at least 8 characters")
     .matches(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]+$/,
-      "Password must contain uppercase, lowercase, number & special character"
+      "Password must contain uppercase, lowercase, number & special character",
     ),
 });
 
@@ -35,17 +36,20 @@ function isValidEmail(email: string) {
 export default function Register({
   isOpen = false,
   isLogin = false,
+  goBack,
   handleClose,
+  mainHandleClose,
 }: {
   isOpen: boolean;
   isLogin: boolean;
+  goBack: () => void;
   handleClose: () => void;
+  mainHandleClose: () => void;
 }) {
   const [isLoader, setIsLoader] = useState(false);
   const [show, setShow] = useState(false);
   const [isPhone, setIsPhone] = useState(false);
   const dispatch = useDispatch();
-  console.log(isLogin, "isLogin");
 
   const formik = useFormik({
     initialValues: {
@@ -62,7 +66,6 @@ export default function Register({
       if (isLogin) {
         try {
           const response = await loginAPI(reqBody);
-          console.log(response, "response========");
 
           if (response?.success) {
             localStorage.setItem("token", response?.data?.token);
@@ -70,11 +73,11 @@ export default function Register({
               login({
                 user: response?.data?.user,
                 token: response?.data?.token,
-              })
+              }),
             );
             toast.success(response?.message);
             action.resetForm();
-            window.location.reload();
+
             handleClose();
           } else {
             toast.error(response?.message);
@@ -87,11 +90,11 @@ export default function Register({
           }
         } finally {
           setIsLoader(false);
+          window.location.reload();
         }
       } else {
         try {
           const response = await registerAPI(reqBody);
-          console.log(response, "response");
 
           if (response?.success) {
             toast.success(response?.message);
@@ -101,8 +104,6 @@ export default function Register({
             toast.error(response?.errors?.[0]?.message || response?.message);
           }
         } catch (error: unknown) {
-          console.log(error, "error===");
-
           if (error instanceof Error) {
             toast.error(error.message);
           } else {
@@ -124,12 +125,23 @@ export default function Register({
     }
   }, [formik.values.userName]);
 
+  const handleCloseAll = () => {
+    handleClose();
+    mainHandleClose();
+  };
+
   return (
-    <ModalSignup isOpen={isOpen} onClose={handleClose}>
+    <ModalSignup isOpen={isOpen} onClose={handleCloseAll}>
       <div className=" flex flex-col pb-5 gap-6">
         {/* Icon */}
-        <div className="mx-auto bg-white dark:bg-black/50  shadow-md rounded-2xl p-3 w-14 h-14 flex items-center justify-center">
-          <FiLogOut className="text-black dark:text-white" size={28} />
+        <div
+          onClick={goBack}
+          className="mx-auto bg-white dark:bg-black/50  shadow-md rounded-2xl p-3 w-14 h-14 flex items-center justify-center"
+        >
+          <ArrowLeftIcon
+            className="text-black dark:text-white cursor-pointer hover:text-[#8160ee]"
+            size={28}
+          />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -160,6 +172,7 @@ export default function Register({
               name="password"
               value={formik.values.password}
               onChange={formik.handleChange}
+              autoComplete="new-password"
               onBlur={formik.handleBlur}
               error={formik.touched.password ? formik.errors.password : ""}
               startIcon={<TbLockFilled className="text-gray-400" size={22} />}
@@ -190,13 +203,13 @@ export default function Register({
 
           <button
             type="submit"
-            className="w-full py-3 flex items-center justify-center  rounded-xl  text-lg  font-semibold  text-white hover:cursor-pointer shadow-lg bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 transition-all duration-300
+            className="w-full py-3 flex items-center justify-center  rounded-xl  text-lg  font-semibold  text-white hover:cursor-pointer shadow-lg bg-[#8160ee] hover:bg-btnbg transition-all duration-300
   "
           >
             {isLoader ? (
               <CircularProgress size={28} className="!text-white" />
             ) : (
-              `Sign${isLogin ? "In" : "Up"}`
+              `Sign ${isLogin ? "in" : "Up"}`
             )}{" "}
           </button>
         </form>

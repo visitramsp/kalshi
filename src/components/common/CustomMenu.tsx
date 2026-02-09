@@ -40,7 +40,7 @@ export default function CustomMenu() {
   };
 
   return (
-    <React.Fragment>
+    <>
       <Box
         sx={{
           display: "flex",
@@ -54,12 +54,12 @@ export default function CustomMenu() {
           <IconButton
             onClick={handleClick}
             size="small"
-            sx={{ ml: 0 }}
+            sx={{ m: 0 }}
             aria-controls={open ? "account-menu" : undefined}
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
           >
-            <FaUserCircle className="!text-blue-500" size={40} />
+            <FaUserCircle className="text-gray-300" size={30} />
           </IconButton>
         </Tooltip>
       </Box>
@@ -129,6 +129,6 @@ export default function CustomMenu() {
           Logout
         </MenuItem>
       </Menu>
-    </React.Fragment>
+    </>
   );
 }

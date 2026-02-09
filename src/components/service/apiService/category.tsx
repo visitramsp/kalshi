@@ -14,13 +14,32 @@ export const getCommonCategoryAll = async () => {
   }
 };
 
-export const commonQuestionFindById = async (id: number, userId: string) => {
+export const commonQuestionFindById = async (
+  id: number,
+  // userId: string,
+  subCategoryId: number | null,
+  sortBy: string,
+  frequency: string,
+  status: string,
+  search: string,
+  excludeCategories: number[],
+) => {
+  // ?categoryId=
   try {
-    const response = await apiInstance.get(
-      `${API_URLs.commonQuestionFindById}/${id}${
-        userId ? `?userId=${userId}` : ""
-      }`
-    );
+    const response = await apiInstance.get(API_URLs.commonQuestionFindById, {
+      params: {
+        categoryId: id,
+        ...(subCategoryId && { eventSectionId: subCategoryId }),
+        ...(sortBy && { sortBy }),
+        ...(frequency && { frequency }),
+        ...(status && { status: status == "Active" ? "OPEN" : "RESOLVED" }),
+        ...(search && { search }),
+        ...(excludeCategories?.length > 0 && {
+          excludeCategories: excludeCategories,
+        }),
+      },
+    });
+
     return response?.data;
   } catch (error: unknown) {
     return {
@@ -33,8 +52,20 @@ export const commonQuestionFindById = async (id: number, userId: string) => {
 export const questionDetails = async (id: string, userId: number) => {
   try {
     const response = await apiInstance.get(
-      `${API_URLs.questionDetails}/${id}${userId ? `?userId=${userId}` : ""}`
+      `${API_URLs.questionDetails}/${id}${userId ? `?userId=${userId}` : ""}`,
     );
+    return response?.data;
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: getErrorMessage(error),
+    };
+  }
+};
+
+export const fetchSubCategory = async (id: number) => {
+  try {
+    const response = await apiInstance.get(`${API_URLs.subCategory}/${id}`);
     return response?.data;
   } catch (error: unknown) {
     return {

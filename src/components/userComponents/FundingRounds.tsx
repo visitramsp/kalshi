@@ -4,8 +4,6 @@ interface balanceText {
   balance: string;
 }
 export default function FundingRounds({ balance }: { balance: balanceText }) {
-  console.log(balance, "balance");
-
   return (
     <section className="mt-10">
       <h2 className="text-lg font-semibold text-slate-900 mb-4">

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -13,121 +12,142 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
+import { useRouter, usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
 
-type TabName =
-  | "Home"
-  | "Replies"
-  | "Bookmarks"
-  | "Profile"
-  | "Community Guidelines"
-  | "Support"
-  | "FAQs";
-
-interface MobileMenuProps {
-  currentTabs: string;
-  handleTabs: (tab: TabName) => void;
-}
-
-export default function MobileMenu({
-  currentTabs,
-  handleTabs,
-}: MobileMenuProps) {
+export default function MobileMenu() {
   const [open, setOpen] = useState(false);
-
-  const handleMenuClick = (tab: TabName) => {
-    handleTabs(tab);
+  const router = useRouter();
+  const pathname = usePathname(); // ✅ App Router safe
+  const userId = useSelector((state: any) => state?.user?.user?.id);
+  const handleMenuClick = (path: string) => {
+    router.push(path);
     setOpen(false);
   };
 
   return (
-    <div className="relative">
-      <button
-        aria-label="Toggle Menu"
-        className="md:hidden text-white text-xl"
-        onClick={() => setOpen((prev) => !prev)}
+    <>
+      {/* ===== Mobile Top Bar ===== */}
+      <div className="md:hidden flex items-center p-4 w-fit">
+        <button
+          aria-label="Toggle Menu"
+          className="dark:text-white text-gray-950 text-xl -top-14 relative"
+          onClick={() => setOpen(true)}
+        >
+          <FaBars />
+        </button>
+      </div>
+
+      {/* ===== Overlay ===== */}
+      {open && (
+        <div
+          className="fixed inset-0  md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ===== Sidebar / Drawer ===== */}
+      <aside
+        className={` md:relative z-50 w-64
+    fixed top-0 left-0 h-full
+    md:pt-5 pt-16
+    py-5 pl-5 md:pl-0
+    md:bg-transparent md:dark:bg-transparent
+    bg-[var(--boxbg2)] dark:bg-[var(--boxbg1)]
+    transition-transform duration-300
+    ${open ? "translate-x-0" : "-translate-x-full"}
+    md:translate-x-0
+    md:relative
+    md:block
+  `}
       >
-        {open ? <FaTimes /> : <FaBars />}
-      </button>
-      <ul
-        className={`fixed top-0 left-0 h-full w-64 bg-[#0f172a] p-5 z-50
-        transform transition-transform duration-300
-        ${open ? "translate-x-0" : "-translate-x-full"}
-        md:static md:translate-x-0 md:w-auto md:bg-transparent`}
-      >
-        <li className="md:hidden mb-6 flex justify-end">
+        <div className="md:hidden flex justify-end mb-6 mt-2 relative">
           <button
             aria-label="Close Menu"
             onClick={() => setOpen(false)}
-            className="text-white text-xl"
+            className="dark:text-white text-gray-500 text-xl absolute top-0 right-3"
           >
             <FaTimes />
           </button>
-        </li>
+        </div>
 
-        <MenuItem
-          label="Home"
-          icon={<FaHome />}
-          active={currentTabs === "Home"}
-          onClick={() => handleMenuClick("Home")}
-        />
+        <ul>
+          <MenuItem
+            label="Home"
+            icon={<FaHome />}
+            active={pathname === "/ideas/"}
+            onClick={() => handleMenuClick("/ideas")}
+          />
 
-        <MenuItem
-          label="Replies"
-          icon={<FaCommentAlt />}
-          active={currentTabs === "Replies"}
-          onClick={() => handleMenuClick("Replies")}
-        />
+          <MenuItem
+            label="Replies"
+            icon={<FaCommentAlt />}
+            active={pathname === "/ideas/replies/"}
+            onClick={() => handleMenuClick("/ideas/replies")}
+          />
 
-        <MenuItem
-          label="Bookmarks"
-          icon={<FaBookmark />}
-          active={currentTabs === "Bookmarks"}
-          onClick={() => handleMenuClick("Bookmarks")}
-        />
+          <MenuItem
+            label="Bookmarks"
+            icon={<FaBookmark />}
+            active={pathname === "/ideas/bookmark/"}
+            onClick={() => handleMenuClick("/ideas/bookmark")}
+          />
 
-        <MenuItem
-          label="Profile"
-          icon={<FaUser />}
-          active={currentTabs === "Profile"}
-          onClick={() => handleMenuClick("Profile")}
-        />
+          <MenuItem
+            label="Profile"
+            icon={<FaUser />}
+            active={pathname.startsWith(`/ideas/profile/${userId}/`)}
+            onClick={() => handleMenuClick(`/ideas/profile/${userId}/`)}
+          />
 
-        <MenuItem
-          label="Community Guidelines"
-          icon={<FaUsers />}
-          active={currentTabs === "Community Guidelines"}
-          onClick={() => handleMenuClick("Community Guidelines")}
-        />
+          <MenuItem
+            label="Community Guidelines"
+            icon={<FaUsers />}
+            active={pathname === "/ideas/community-guidelines/"}
+            onClick={() => handleMenuClick("/ideas/community-guidelines")}
+          />
 
-        <MenuItem
-          label="Support"
-          icon={<FaHeadset />}
-          active={currentTabs === "Support"}
-          onClick={() => handleMenuClick("Support")}
-        />
+          <MenuItem
+            label="Support"
+            icon={<FaHeadset />}
+            active={pathname === "/ideas/support/"}
+            onClick={() => handleMenuClick("/ideas/support")}
+          />
 
-        <MenuItem
-          label="FAQs"
-          icon={<FaQuestionCircle />}
-          active={currentTabs === "FAQs"}
-          onClick={() => handleMenuClick("FAQs")}
-        />
+          <MenuItem
+            label="FAQs"
+            icon={<FaQuestionCircle />}
+            active={pathname === "/ideas/faq/"}
+            onClick={() => handleMenuClick("/ideas/faq")}
+          />
 
-        {/* CTA Button */}
-        <li className="mt-6">
-          <Link
-            href="#"
-            onClick={() => setOpen(false)}
-            className="block text-center bg-[#c8aa76] hover:bg-[#c8aa76]/80
-            py-2 px-4 text-black rounded font-semibold"
-          >
-            Post
-          </Link>
-        </li>
-      </ul>
-    </div>
+          {/* CTA */}
+          <li className="mt-6">
+            {/* <Link
+              href="#"
+              onClick={() => setOpen(false)}
+              className="block text-center bg-blue-500 hover:bg-blue-500/80
+              py-2 px-4 text-white rounded font-semibold"
+            >
+              Post
+            </Link> */}
+            {/* <button
+              onClick={() => setOpen(false)}
+              className="block w-full text-center bg-blue-500 
+             hover:bg-blue-500/80 active:bg-blue-600 
+             py-2 px-4 text-white rounded font-semibold 
+             transition duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer"
+            >
+              Post
+            </button> */}
+          </li>
+        </ul>
+      </aside>
+    </>
   );
 }
+
+/* ================= MENU ITEM ================= */
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -141,7 +161,12 @@ function MenuItem({ icon, label, active, onClick }: MenuItemProps) {
     <li onClick={onClick} className="my-4 cursor-pointer text-sm select-none">
       <span
         className={`flex items-center gap-3 transition-colors
-        ${active ? "text-[#c8aa76]" : "text-gray-400 hover:text-[#c8aa76]"}`}
+          ${
+            active
+              ? "font-semibold text-[#8160ee] font-bold"
+              : "dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-gray-900"
+          }
+        `}
       >
         <span className="text-base">{icon}</span>
         {label}

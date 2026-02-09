@@ -1,8 +1,11 @@
+import { countWords, MAX_WORDS } from "@/utils/Content";
 import React, { useMemo, useRef } from "react";
 
 type Props = {
   message: string;
   setMessage: (v: string) => void;
+  image?: string | null; // 👈 image props se
+  onRemoveImage?: () => void; // 👈 remove handler
 };
 
 function escapeHtml(str: string) {
@@ -25,27 +28,27 @@ function highlightText(text: string) {
   const hashRegex = /(^|[\s(>])(#[_a-zA-Z0-9]{1,50})/g;
   const urlRegex = /(^|[\s(>])((https?:\/\/|www\.)[^\s<]+[^<.,:;"')\]\s])/gi;
 
-  return (
-    withBreaks
-      // URLs first (important) convert and highlight
-      .replace(
-        urlRegex,
-        `$1<span class="text-blue-500 text-sm dark:text-blue-400 underline font-medium">$2</span>`
-      )
-      // @mentions convert for mention user to highlight
-      .replace(
-        mentionRegex,
-        `$1<span class="text-emerald-500 text-sm dark:text-emerald-400 font-medium">$2</span>`
-      )
-      // #hashtags highlight
-      .replace(
-        hashRegex,
-        `$1<span class="text-sky-500 text-sm dark:text-sky-400 font-medium">$2</span>`
-      )
-  );
+  return withBreaks
+    .replace(
+      urlRegex,
+      `$1<span class="text-blue-500 dark:text-blue-400 underline">$2</span>`,
+    )
+    .replace(
+      mentionRegex,
+      `$1<span class="text-emerald-500 dark:text-emerald-400">$2</span>`,
+    )
+    .replace(
+      hashRegex,
+      `$1<span class="text-sky-500 dark:text-sky-400">$2</span>`,
+    );
 }
 
-export default function InputTextArea({ message, setMessage }: Props) {
+export default function InputTextArea({
+  message,
+  setMessage,
+  image,
+  onRemoveImage,
+}: Props) {
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,52 +63,76 @@ export default function InputTextArea({ message, setMessage }: Props) {
     overlayRef.current.scrollLeft = taRef.current.scrollLeft;
   };
 
-  console.log(message, "message");
-
   return (
-    <div className="relative  w-full">
-      <div
-        ref={overlayRef}
-        aria-hidden="true"
-        className="
-          absolute inset-0
-          pt-4
-          text-sm
-          leading-relaxed
-          whitespace-pre-wrap
-          break-words
-          overflow-auto
-          pointer-events-none
-          text-gray-900 dark:text-gray-400
-        "
-        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-      />
-      <textarea
-        ref={taRef}
-        rows={4}
-        value={message || ""}
-        onChange={(e) => setMessage(e.target.value)}
-        onScroll={syncScroll}
-        placeholder="What is your prediction?"
-        className="
-          relative
-          pt-4
-          flex-1
-          w-full
-          min-h-[80px]
-          text-sm
-          leading-relaxed
-          bg-transparent
-          resize-none
-          !outline-none
-          focus:outline-none
-          focus:ring-0
-          text-transparent
-          caret-gray-900 dark:caret-gray-200
-          placeholder:text-gray-400
-          overflow-auto
-        "
-      />
+    <div className="w-full">
+      {image && (
+        <div className="relative w-fit">
+          <img
+            src={image}
+            alt="preview"
+            className="max-h-40 rounded-xl border border-gray-300 dark:border-gray-700"
+          />
+          {onRemoveImage && (
+            <button
+              type="button"
+              onClick={onRemoveImage}
+              className="absolute !cursor-pointer -top-2 -right-2 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+      <div className="relative w-full">
+        <div
+          ref={overlayRef}
+          aria-hidden="true"
+          className="
+        absolute inset-0
+        pt-4
+       
+        leading-relaxed
+        whitespace-pre-wrap
+        break-words
+            hideScrollbar
+        pointer-events-none
+        text-gray-900 dark:text-gray-500
+      "
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+
+        {/* ✍️ TEXTAREA */}
+        <textarea
+          ref={taRef}
+          rows={4}
+          value={message || ""}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (countWords(value) <= MAX_WORDS) {
+              setMessage(value);
+            }
+          }}
+          onScroll={syncScroll}
+          placeholder="What is your prediction?"
+          className="
+            relative
+            pt-4
+            w-full
+            min-h-[80px]
+            hideScrollbar
+            leading-relaxed
+            bg-transparent
+            resize-none
+            outline-none
+            text-transparent
+            caret-gray-900 dark:caret-gray-200
+            placeholder:text-gray-400
+            placeholder:dark:text-gray-600
+        
+
+          "
+        />
+      </div>
     </div>
   );
 }

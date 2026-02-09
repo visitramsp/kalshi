@@ -1,52 +1,14 @@
 import { AxiosError } from "axios";
 import { ChartSeries, RawSeries } from "./typesInterface";
 
-// export const prepareSeries = (data: RawSeries[] | undefined): ChartSeries[] => {
-//   if (!data || data.length === 0) return [];
-
-//   const maxLength = Math.max(...data.map((item) => item.data.length));
-
-//   if (maxLength === 0) return [];
-
-//   return data.map((item) => {
-//     const originalData = item.data;
-
-//     const lastPoint = originalData[originalData.length - 1];
-//     const lastPrice = lastPoint?.price ?? 0;
-//     const lastTimestamp = lastPoint?.timestamp ?? 0;
-
-//     const extendedData = [...originalData];
-
-//     if (originalData.length < maxLength) {
-//       const missing = maxLength - originalData.length;
-
-//       for (let i = 0; i < missing; i++) {
-//         extendedData.push({
-//           price: lastPrice,
-//           timestamp: lastTimestamp,
-//         });
-//       }
-//     }
-
-//     return {
-//       name: item.optionName,
-//       data: extendedData.map((d) => ({
-//         x: d.timestamp,
-//         y: Number(d.price.toFixed(2)),
-//       })),
-//     };
-//   });
-// };
-
 export const prepareSeries = (data: RawSeries[] | undefined): ChartSeries[] => {
   if (!data || data.length === 0) return [];
 
   // 1️⃣ Collect ALL unique timestamps
   const allTimestamps = Array.from(
-    new Set(data.flatMap((item) => item.data.map((d) => d.timestamp)))
+    new Set(data.flatMap((item) => item.data.map((d) => d.timestamp))),
   ).sort((a, b) => a - b);
 
-  // 2️⃣ Normalize each series
   return data.map((item) => {
     const priceMap = new Map<number, number>();
 
@@ -62,12 +24,12 @@ export const prepareSeries = (data: RawSeries[] | undefined): ChartSeries[] => {
       }
       return {
         x: timestamp,
-        y: Number(lastPrice.toFixed(2)),
+        y: Number(truncateValue(Number(lastPrice || 0))),
       };
     });
 
     return {
-      name: item.optionName,
+      name: item.name,
       data: normalizedData,
     };
   });
@@ -150,15 +112,15 @@ export function HighlightTexts({ text }: { text: string }) {
   const highlightedHtml = withBreaks
     .replace(
       urlRegex,
-      `$1<span class="text-blue-500 text-sm dark:text-blue-400 underline font-medium">$2</span>`
+      `$1<span class="text-blue-500 text-sm dark:text-blue-400 underline font-medium">$2</span>`,
     )
     .replace(
       mentionRegex,
-      `$1<span class="text-emerald-500 dark:text-emerald-400 font-medium">$2</span>`
+      `$1<span class="text-emerald-500 dark:text-emerald-400 font-medium">$2</span>`,
     )
     .replace(
       hashRegex,
-      `$1<span class="text-sky-500 dark:text-sky-400 font-medium">$2</span>`
+      `$1<span class="text-sky-500 dark:text-sky-400 font-medium">$2</span>`,
     );
 
   return (
@@ -168,3 +130,19 @@ export function HighlightTexts({ text }: { text: string }) {
     />
   );
 }
+
+export const truncateValue = (num: number, decimals: number = 2) => {
+  const factor = Math.pow(10, decimals);
+  const truncated = Math.floor(num * factor) / factor;
+  return truncated.toFixed(decimals);
+};
+
+export const MAX_WORDS = 500;
+
+export function countWords(text: string) {
+  return text?.length;
+  // return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export const isGifImage = (url = "") =>
+  /\.gif($|\?)/i.test(url) || url.includes("giphy.com");
